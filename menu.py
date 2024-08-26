@@ -1,4 +1,5 @@
 from diary import Diary
+from lab import Lab
 from enum import Enum
 from datetime import datetime
 from database import DB
@@ -30,18 +31,19 @@ def init_menu(user):
     if page == PageType.DIARY:
         controller = Diary(user['id'], db)
         controller_handler = diary_handler
-    # elif selected_page == '2':
+        command_raw = "/p"
+    elif page == PageType.LAB:
+        controller = None
+        controller_handler = lab_handler
+        command_raw = "/p"
+    # elif page == '3':
     #     pass
-    # elif selected_page == '3':
-    #     pass
-    # elif selected_page == '4':
+    # elif page == '4':
     #     pass
     else:
         print('Invalid command2')
         return
 
-    os.system('cls' if os.name == 'nt' else 'clear')
-    command_raw = input('Enter command: ')
     os.system('cls' if os.name == 'nt' else 'clear')
 
     while not re.search(r'\s*exit\s*', command_raw) and not re.search(r'\s*menu\s*', command_raw):
@@ -95,6 +97,32 @@ def diary_handler(command, params, diary: Diary, user):
     
     raise ValueError('Invalid command5')
 
+def lab_handler(command, params, lab, user):
+    options = {"muscle_mass": "Muscle mass", "body_fat" : "Body fat reduction", "energy": "Energy", "stength": "Strength"}
+    options_text = "\n".join([str(index + 1) + ". " + list(options.values())[index] for index in range(len(options))])
+    print("Lab")
+    print("Choose the number of the option you wish to max out:")
+    print(options_text)
+    selected_option = input()
+
+    while not selected_option or int(selected_option) > 4:
+        print('Invalid otpion! Try again:')
+        selected_option = input()
+
+    lab = Lab()
+    print("Choose the chemicals to experiment with (separate with comma):")
+    all_chems = ", ".join(lab.all_chem_names)
+    print(f"(Possible choices: {all_chems})")
+    selected_chems = input()
+
+    while not selected_chems or not len(selected_chems):
+        print('Invalid input! Try again:')
+        selected_chems = input()
+
+    selected_chems = selected_chems.split(",")
+    # TODO fix issue with odd number of parameter
+    lab_result = lab.experiment(list(options.keys())[int(selected_option)], selected_chems)
+    print(lab_result)
 
 def get_user_data_input():
     print('Please provide your info:')
@@ -117,7 +145,8 @@ def get_user_data_input():
 def login_or_reg(action = None):
     print('Please select an option:\n1. Login\n2. Register')
     user = {}
-    action = input() if action is not None else action
+    if (not action):
+        action = input()
     if action == '1':
         print('Enter your name:')
         user_name = input()
