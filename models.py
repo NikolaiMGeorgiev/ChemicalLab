@@ -19,3 +19,17 @@ class DiaryLog(Base):
     chemical = Column(String)
     quantity = Column(Float)
     date = Column(DateTime)
+
+class LabHistory(Base):
+    __tablename__ = 'lab_history'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer)
+    substance = Column(String)
+    muscle_mass = Column(Integer)
+    body_fat = Column(Integer)
+    energy = Column(Integer)
+    stength = Column(Integer)
+    cancer = Column(Integer)
+    impotence = Column(Integer)
+    diabetes = Column(Integer)
+    heart_disease = Column(Integer)

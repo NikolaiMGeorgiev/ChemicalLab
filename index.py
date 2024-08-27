@@ -3,7 +3,7 @@ from datetime import datetime
 from database import DB, Users
 from user import User
 from diary import Diary
-from menu import init_menu, login_or_reg
+from menu import Menu
 
 # user_data = {
 #     "name": "User2", "age": 25, "weight": 78.5, "height": 185, "bodyfat": 12.2
@@ -18,8 +18,7 @@ from menu import init_menu, login_or_reg
 # user = User(name="User2", age=25, weight=78.5, height=185, bodyfat=12.2)
 
 db = DB()
-user = login_or_reg()
-os.system('cls' if os.name == 'nt' else 'clear')
+menu = Menu(db, None)
+user = menu.login_or_reg()
 if user: 
-    print(f'Welcome, {user["name"]}')
-    init_menu(user)
+    menu.init_menu()

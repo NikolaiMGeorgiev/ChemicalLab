@@ -16,27 +16,29 @@ class Diary():
         self.populate_diary_logs()
 
     def populate_diary_logs(self):
-        with self.db.Session() as session:
-            query = session.query(DiaryLog).filter(DiaryLog.user_id == self.user_id).order_by(desc(DiaryLog.date))
-            grouped_logs = {}
-            for log in query.all():
-                date = log.date.strftime('%d.%m.%Y')
-                if date not in grouped_logs:
-                    grouped_logs[date] = []
-                grouped_logs[date].append(log)
-            self.logs = grouped_logs
+        logs = self.db.get_diary_logs(self.user_id)
+        grouped_logs = {}
+        for log in logs:
+            date = log["date"].strftime('%d.%m.%Y')
+            if date not in grouped_logs:
+                grouped_logs[date] = []
+            grouped_logs[date].append(log)
+        self.logs = grouped_logs
     
     def __call__(self):
-        col_lengths = [10, 10]
+        all_logs = []
+        for logs in self.logs.values():
+            all_logs += logs
+        col_lengths = {
+            "chemical": max([len(chemical) for chemical in map(lambda log: log["chemical"], all_logs)]) + 2,
+            "quantity": len("quantity") + 2
+        }
         vertical_header_length = 12
-        header_texts = list(self.header_map.values())
         cols = list(self.header_map.keys())
         header = self.vertical_header + " " * (vertical_header_length - len(self.vertical_header))
 
-        for i in range(len(col_lengths)):
-            text = header_texts[i]
-            offset = (col_lengths[i] - len(text)) * " "
-            header += f"{text}{offset}"
+        for column in col_lengths.keys():
+            header += self.header_map[column] + (col_lengths[column] - len(self.header_map[column])) * " "
 
         row_separator = "_" * len(header)
         print(f"{header}\n{row_separator}")
@@ -44,10 +46,8 @@ class Diary():
         for date, logs in self.logs.items():
             for log in logs:
                 row = date + " " * (vertical_header_length - len(date)) if log == logs[0] else " " * vertical_header_length
-                for i in range(len(col_lengths)):
-                    text = str(log.__dict__[cols[i]])
-                    offset = (col_lengths[i] - len(text)) * " "
-                    row += f"{text}{offset}"
+                for column in cols:
+                    row += str(log[column]) + (col_lengths[column] - len(str(log[column]))) * " "
                 print(row)
             print(row_separator)
 

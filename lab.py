@@ -1,7 +1,6 @@
 from random import randrange, shuffle, seed, uniform
 import math
 import time
-import sys
 
 """
 chem_pos_coef = {}
@@ -35,9 +34,15 @@ class Lab:
         self.chem_pos_coef = {'Al': [0.1, 0.2, 0.7, 0.7, 0.0, 0.5], 'Na': [0.3, 0.1, 0.1, 0.3, 0.3, 0.8], 'K': [0.5, 0.0, 0.1, 0.3, 0.6, 0.4], 'Cr': [0.5, 0.1, 0.2, 0.0, 0.8, 0.9], 'Co': [0.8, 0.4, 0.4, 0.4, 0.5, 0.6], 'Ni': [0.1, 0.7, 0.2, 1.0, 0.3, 0.0], 'As': [0.4, 0.2, 0.8, 0.9, 0.2, 0.5], 'Cd': [0.3, 0.2, 0.1, 0.4, 0.0, 0.5], 'Hg': [0.7, 0.2, 0.6, 0.0, 0.4, 0.7], 'Pb': [0.5, 0.2, 0.7, 0.7, 0.4, 0.1], 'Sn': [0.9, 0.8, 0.7, 0.7, 0.1, 0.5], 'Ti': [0.6, 0.5, 0.6, 1.0, 0.6, 0.1], 'Ag': [0.6, 0.1, 0.9, 0.2, 1.0, 0.3], 'Au': [0.3, 0.4, 0.9, 0.2, 0.6, 0.8], 'Pt': [0.3, 0.7, 0.2, 1.0, 0.6, 0.7], 'Ir': [0.6, 0.8, 0.1, 0.1, 0.6, 0.8], 'Os': [0.9, 0.3, 0.3, 0.3, 0.3, 0.7], 'Rh': [0.5, 0.4, 0.6, 0.5, 0.4, 0.1], 'Ru': [0.3, 0.7, 0.1, 0.7, 0.8, 0.5], 'Re': [0.6, 0.5, 0.9, 0.9, 0.9, 0.0], 'W': [0.9, 0.0, 0.2, 0.8, 0.7, 1.0], 'Ta': [0.6, 0.4, 0.5, 0.6, 0.7, 0.7], 'Hf': [0.5, 0.1, 0.2, 0.8, 0.1, 0.2], 'Th': [0.7, 0.2, 0.4, 0.2, 0.6, 0.7], 'U': [0.3, 0.4, 1.0, 0.1, 0.1, 0.1], 'Np': [0.2, 0.4, 0.4, 0.4, 0.5, 0.1], 'Pu': [0.4, 1.0, 0.3, 0.4, 0.5, 0.3], 'Am': [0.5, 0.2, 0.5, 0.2, 0.0, 0.9], 'Cm': [0.6, 0.2, 0.4, 0.9, 0.5, 0.4], 'Bk': [0.8, 0.7, 0.0, 0.5, 0.3, 0.6], 'Cf': [0.6, 0.6, 0.6, 0.8, 0.7, 0.7], 'Es': [0.9, 0.2, 0.8, 0.2, 1.0, 0.5], 'Fm': [0.1, 0.1, 0.2, 0.5, 0.9, 0.0], 'Md': [0.1, 0.7, 0.9, 0.4, 0.7, 0.1], 'No': [0.1, 0.7, 0.6, 0.1, 0.8, 0.4], 'Lr': [0.3, 0.1, 0.0, 0.2, 0.9, 0.1], 'Rf': [0.1, 0.7, 0.2, 0.6, 0.2, 0.6], 'Db': [0.0, 1.0, 0.6, 0.0, 0.6, 0.9], 'Sg': [0.3, 0.3, 0.2, 0.4, 0.2, 1.0], 'Bh': [0.9, 0.9, 0.7, 0.6, 0.7, 0.4], 'Hs': [1.0, 0.8, 0.7, 0.6, 0.9, 0.2], 'Mt': [0.8, 0.6, 0.3, 0.2, 0.2, 0.7], 'Ds': [0.4, 0.3, 0.3, 0.5, 0.2, 0.0], 'Rg': [0.6, 0.8, 1.0, 0.5, 0.4, 0.6], 'Cn': [0.1, 0.0, 0.6, 0.1, 0.5, 0.1], 'Nh': [0.8, 0.7, 0.3, 0.0, 0.1, 0.8], 'Fl': [0.4, 0.2, 0.1, 0.2, 0.4, 0.7], 'Mc': [0.0, 0.7, 0.5, 0.7, 0.7, 0.4], 'Lv': [0.7, 0.9, 0.9, 0.8, 0.5, 0.6], 'Ts': [1.0, 0.0, 0.0, 0.0, 0.3, 0.8], 'Og': [0.9, 0.2, 0.9, 0.0, 0.3, 1.0]}
         self.max_coeff = 1000
         self.population_count =  10
-        self.split_group = 6
-        self.parents_cutoff = 4
         self.population = []
+
+    def configure(self, chems, max_by_property):
+        self.max_by_property = max_by_property
+        self.chem_names = chems
+        self.chems_count = len(chems)
+        self.split_group = 4 if self.chems_count > 6 else 2
+        self.parents_cutoff = 4
+        self.generate_population()
 
     def generate_population(self):
         chems_list = list(range(len(self.chem_names)))
@@ -134,6 +139,20 @@ class Lab:
         max_property_index = self.pos_eff_names.index(self.max_by_property)
         return (self.chem_pos_eff[chem_name][max_property_index] - self.chem_neg_eff[chem_name][max_property_index]) + (pos_coeff - neg_coeff) * self.chem_pos_coef[chem_name][position]
 
+    def get_substance_properties(self, substance):
+        properties = {name: 0 for name in list(self.pos_eff_names) + list(self.neg_eff_names)}
+        for chem_pos in range(len(substance)):
+            chem_name = substance[chem_pos]
+            for effect_pos in range(len(self.pos_eff_names)):
+                effect_name = self.pos_eff_names[effect_pos]
+                properties[effect_name] += self.chem_pos_eff[chem_name][effect_pos] * self.chem_pos_coef[chem_name][chem_pos]
+            for effect_pos in range(len(self.neg_eff_names)):
+                effect_name = self.neg_eff_names[effect_pos]
+                properties[effect_name] += self.chem_neg_eff[chem_name][effect_pos] * self.chem_pos_coef[chem_name][chem_pos]
+        for property in properties.keys():
+            properties[property] = round(properties[property] * 100/ self.chems_count)
+        return properties
+
     def chem_string(self, chems):
         return ", ".join(map(str, chems))
 
@@ -143,10 +162,7 @@ class Lab:
         print(",".join([names[int(index)] for index in population_data["fittest_individual"].split(", ")]))
 
     def experiment(self, max_by_property, chems):
-        self.max_by_property = max_by_property
-        self.chem_names = chems
-        self.chems_count = len(chems)
-        self.generate_population()
+        self.configure(chems, max_by_property)
 
         min_ecpoh = self.config["min_epochs"]
         epoch_interval = self.config["epoch_interval"]
@@ -163,7 +179,11 @@ class Lab:
                 if best_evalutaion == last_best_evalutation:
                     tolerance_left -= epoch_interval
                     if (tolerance_left <= 0):
-                        return [self.chem_names[int(index)] for index in population_data["fittest_individual"].split(", ")]
+                        substance = [self.chem_names[int(index)] for index in population_data["fittest_individual"].split(", ")]
+                        return {
+                            "substance": substance,
+                            "properties": self.get_substance_properties(substance)
+                        } 
                 else:
                     tolerance_left = self.config["tolerance"]
                     last_best_evalutation = best_evalutaion
@@ -171,10 +191,14 @@ class Lab:
             population_data = self.select_parents(children)
             self.population = population_data["population"]
 
-            if (i == 1):
-                self.print_result(population_data, self.chem_names)
+            # if (i == 1):
+            #     self.print_result(population_data, self.chem_names)
 
             if not best_evalutaion or best_evalutaion < population_data["evaluation"]:
                 best_evalutaion = population_data["evaluation"]
         
-        return [self.chem_names[int(index)] for index in population_data["fittest_individual"].split(", ")]
+            substance = [self.chem_names[int(index)] for index in population_data["fittest_individual"].split(", ")]
+            return {
+                "substance": substance,
+                "properties": self.get_substance_properties(substance)
+            } 
