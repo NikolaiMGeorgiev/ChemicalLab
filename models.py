@@ -12,6 +12,24 @@ class Users(Base):
     height = Column(Float)
     bodyfat = Column(Float)
 
+class Vendors(Base):
+    __tablename__ = 'vendors'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+class Chats(Base):
+    __tablename__ = 'chats'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer)
+    vendor_id = Column(Integer)
+
+class Messages(Base):
+    __tablename__ = 'messages'
+    id = Column(Integer, primary_key=True)
+    chat_id = Column(Integer)
+    content = Column(String)
+    sent_time = Column(DateTime)
+
 class DiaryLog(Base):
     __tablename__ = 'diary'
     id = Column(Integer, primary_key=True)

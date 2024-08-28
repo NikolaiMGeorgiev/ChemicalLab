@@ -4,6 +4,7 @@ from database import DB, Users
 from user import User
 from diary import Diary
 from menu import Menu
+from time import sleep
 
 # user_data = {
 #     "name": "User2", "age": 25, "weight": 78.5, "height": 185, "bodyfat": 12.2
@@ -17,8 +18,17 @@ from menu import Menu
 # ]
 # user = User(name="User2", age=25, weight=78.5, height=185, bodyfat=12.2)
 
+from chat.chat import Chat
+
 db = DB()
+
+
 menu = Menu(db, None)
 user = menu.login_or_reg()
 if user: 
-    menu.init_menu()
+    if (user["type"] == "user"):
+        menu.init_menu()
+    else:
+        chat = Chat(db, user["id"], "vendor")
+        chat.create_chat()
+        chat.wait_for_user()

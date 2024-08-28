@@ -4,6 +4,7 @@ from enum import Enum
 import os
 import re
 from diaryform import init_diary_form
+from chat.chat import Chat
 
 class PageType(Enum):
     DIARY = 1
@@ -27,8 +28,8 @@ class Menu():
             self.diary_handler(Diary(self.user['id'], self.db))
         elif page == PageType.LAB:
             self.lab_handler()
-        # elif page == '3':
-        #     pass
+        elif page == PageType.DISTRIBUTORS:
+            pass
         # elif page == '4':
         #     pass
         else:
@@ -116,7 +117,24 @@ class Menu():
                     print(row_text)
         _ = input("Press any key to go back to the menu...")
         self.clear()
-        self.lab_handler(None)
+        self.lab_handler()
+
+    def distributors_handler(self):
+        self.clear()
+        print("Distributors")
+        print("Select the number of an option:\n1. View chat history\n2. New chat")
+        selected_option = self.get_valid_number(2, "Select option: ")
+
+        if selected_option == 1:
+            pass
+        else:
+            chat = Chat(self.db, self.user["id"], "user")
+            if chat.wait_for_vendor():
+                message = input("Enter message: ")
+                chat.send_message(message)
+            else:
+                _ = input("Press any key to go back to the menu...")
+                self.distributors_handler()
 
     def get_user_data_input(self):
         print('Please provide your info:')
@@ -136,25 +154,28 @@ class Menu():
         self.db.add_user(user_data)
         return user_data
 
-    def login_or_reg(self, action = None):
-        print('Please select an option:\n1. Login\n2. Register')
+    def login_or_reg(self):
+        print('Please select an option:\n1. Login (as user)\n3. Login (as vendor)\n3. Register (as user)')
         user = {}
-        if (not action):
-            action = input()
-        if action == '1':
+        action = self.get_valid_number(3, "Enter option: ")
+        if action == 1 or action == 2:
             print('Enter your name:')
             user_name = input()
-            user = self.db.get_user(user_name)
+            user = self.db.get_user(user_name) if action == 1 else self.db.get_vendor(user_name)
             if not user:
-                return print('User not found')
-            user_data = {'id': user.id, 'name': user.name}
+                self.clear()
+                print('User not found')
+                self.login_or_reg(action)
+            user_data = {'id': user.id, 'name': user.name, 'type': 'user' if action == 1 else 'vendor'}
             self.user = user_data
             return user_data
-        elif action == '2':
+        elif action == 3:
             user = self.get_user_data_input()
             print('User registered\nPlease log in:')
             return self.login_or_reg('1')
-        return print('Invalid command')
+        self.clear()
+        print('Invalid command! Try again.')
+        self.login_or_reg()
 
     def clear(self):
         os.system('cls' if os.name == 'nt' else 'clear')

@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
-from models import Users, DiaryLog, LabHistory
+from models import Users, Vendors, Chats, Messages, DiaryLog, LabHistory
 
 class DB():
     def __init__(self):
@@ -21,7 +21,27 @@ class DB():
             session.add(new_user)
             session.commit()
             return list()
-    
+        
+    def add_chat(self, user_id, vendor_id):
+        with self.Session() as session:
+            if self.get_chat_by_users(user_id, vendor_id):
+                return
+            new_chat = Chats(
+                user_id = user_id,
+                vendor_id = vendor_id
+            )
+            session.add(new_chat)
+            session.commit()
+
+    def add_message(self, chat_id, content):
+        with self.Session() as session:
+            new_message = Messages(
+                chat_id = chat_id,
+                content = content
+            )
+            session.add(new_message)
+            session.commit()
+
     def add_diary_log(self, user_id, chemical, quantity, date):
         with self.Session() as session:
             new_user = DiaryLog(
@@ -55,6 +75,28 @@ class DB():
             query = session.query(Users).filter(Users.name == user_name)
             return query.first()
         
+    def get_vendor(self, vendor_name):
+        with self.Session() as session:
+            query = session.query(Vendors).filter(Vendors.name == vendor_name)
+            return query.first()
+        
+    def get_chat(self, chat_id):
+        with self.Session() as session:
+            query = session.query(Chats).filter(Chats.id == chat_id).first()
+            if query:
+                return {key: value for key, value in query.__dict__.items() if key != "_sa_instance_state"}
+    
+    def get_chat_by_users(self, user_id, vendor_id):
+        with self.Session() as session:
+            query = session.query(Chats).filter(Chats.user_id == user_id, Chats.vendor_id == vendor_id).first()
+            if query:
+                return {key: value for key, value in query.__dict__.items() if key != "_sa_instance_state"}
+    
+    def get_pending_chat(self, vendor_id):
+        with self.Session() as session:
+            query = session.query(Chats).filter(Chats.user_id == None, Chats.vendor_id == vendor_id).order_by(desc(Chats.id)).first()
+            return {key: value for key, value in query.__dict__.items() if key != "_sa_instance_state"}
+        
     def get_diary_logs(self, user_id):
         with self.Session() as session:
             query = session.query(DiaryLog).filter(DiaryLog.user_id == user_id).order_by(desc(DiaryLog.date))
@@ -73,3 +115,13 @@ class DB():
         else:
             return []
         return list(filter(lambda x: x != 'id', table_class.__table__.columns.keys()))
+    
+    def join_pending_chat(self, user_id):
+        with self.Session() as session:
+            chat_data_raw = session.query(Chats).filter(Chats.user_id == None).order_by(Chats.id).first()
+            if (chat_data_raw):
+                chat_data = {key: value for key, value in chat_data_raw.__dict__.items() if key != "_sa_instance_state"}
+                chat_data_raw.user_id = user_id
+                session.commit()
+                return chat_data
+            
