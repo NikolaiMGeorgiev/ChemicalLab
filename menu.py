@@ -17,44 +17,51 @@ class Menu():
     def __init__(self, db, user):
         self.db = db
         self.user = user
+        self.menu_texts = {
+            "main": "Menu\n1. Diary logs\n2. Lab\n3. Vendors",
+            "lab": "Lab\nSelect the number of an option:\n1. Experiment\n2. View lab history",
+            "vendors": "Vendors:\n1. View chat history\n2. New chat",
+            "login": "Please select an option:\n1. Login (as user)\n3. Login (as vendor)\n3. Register (as user)"
+        }
 
     def init_menu(self):
         self.clear()
-        print("Menu\n1. Diary logs\n2. Lab\n3. Distributors\n4. User info")
+        if (self.user["type"] == "vendor"):
+            self.vendor_handler()
+            return
+        print(self.menu_texts["main"])
         selected_page = self.get_valid_number(4, "Select page by index: ")
         page = PageType(int(selected_page))
 
         if page == PageType.DIARY:
+            self.clear()
             self.diary_handler(Diary(self.user['id'], self.db))
         elif page == PageType.LAB:
             self.lab_handler()
         elif page == PageType.DISTRIBUTORS:
-            pass
-        # elif page == '4':
-        #     pass
+            self.distributors_handler()
         else:
             self.init_menu()
 
     def diary_handler(self, diary: Diary):
+        print(diary.title)
+        diary()
         command_raw = input('Enter command: ')
         self.clear()
-        command, params = self.get_command(command_raw).values()
-        if command in ['s', 'p']:
-            print(diary.title)
 
         try:
+            command, params = self.get_command(command_raw).values()
             if command == 's':
                 sort_by = params[0]
-                reversed_order = len(params) == 2 and params[1] == 'desc'
-                if sort_by not in diary.header_map.keys() and sort_by != diary.vertical_header:
+                reversed_order = True if len(params) == 2 and params[1] == 'desc' else False
+                if sort_by not in diary.header_map.keys() and sort_by != "date":
                     raise ValueError('Invalid command! Try agin.')
+                # self.clear()
                 diary.sort_logs(sort_by, reverse=reversed_order)
             elif command == 'n':
                 form_data = init_diary_form()
                 self.db.add_diary_log(self.user['id'], form_data.chemical.value, form_data.quantity.value, form_data.date.value)
                 diary.populate_diary_logs()
-            elif command == 'p':
-                diary()
             else:
                 raise ValueError('Invalid command! Try agin.')
         except ValueError as e: 
@@ -66,8 +73,7 @@ class Menu():
         self.clear()
         options = {"muscle_mass": "Muscle mass", "body_fat" : "Body fat reduction", "energy": "Energy", "stength": "Strength"}
         options_text = "\n".join([str(index + 1) + ". " + list(options.values())[index] for index in range(len(options))])
-        print("Lab")
-        print("Select the number of an option:\n1. Experiment\n2. View lab history")
+        print(self.menu_texts["lab"])
         selected_option = self.get_valid_number(2, "Select option: ")
         
         print("Lab")
@@ -121,8 +127,7 @@ class Menu():
 
     def distributors_handler(self):
         self.clear()
-        print("Distributors")
-        print("Select the number of an option:\n1. View chat history\n2. New chat")
+        print(self.menu_texts["vendors"])
         selected_option = self.get_valid_number(2, "Select option: ")
 
         if selected_option == 1:
@@ -130,11 +135,37 @@ class Menu():
         else:
             chat = Chat(self.db, self.user["id"], "user")
             if chat.wait_for_vendor():
-                message = input("Enter message: ")
-                chat.send_message(message)
+                self.clear()
+                print("Joined chat with vendor")
+                while True:
+                    message = input("Enter message: ")
+                    self.check_for_exit_command(message)
+                    chat.send_message(message)
+                    self.clear()
+                    chat.print_messages()
+                    chat.wait_for_response()
+                    self.clear()
+                    chat.print_messages()
             else:
                 _ = input("Press any key to go back to the menu...")
                 self.distributors_handler()
+
+    def vendor_handler(self):
+        chat = Chat(self.db, self.user["id"], "vendor")
+        chat.create_chat()
+        self.clear()
+        print("Waiting for a user to join the chat...")
+        chat.wait_for_user()
+        print("A user entered the chat.")
+        while True:
+            chat.wait_for_response()
+            self.clear()
+            chat.print_messages()
+            message = input("Enter message: ")
+            self.check_for_exit_command(message)
+            chat.send_message(message)
+            self.clear()
+            chat.print_messages()
 
     def get_user_data_input(self):
         print('Please provide your info:')
@@ -155,7 +186,7 @@ class Menu():
         return user_data
 
     def login_or_reg(self):
-        print('Please select an option:\n1. Login (as user)\n3. Login (as vendor)\n3. Register (as user)')
+        print(self.menu_texts["login"])
         user = {}
         action = self.get_valid_number(3, "Enter option: ")
         if action == 1 or action == 2:
@@ -171,8 +202,8 @@ class Menu():
             return user_data
         elif action == 3:
             user = self.get_user_data_input()
-            print('User registered\nPlease log in:')
-            return self.login_or_reg('1')
+            print('User registered\nPlease log in.')
+            return self.login_or_reg()
         self.clear()
         print('Invalid command! Try again.')
         self.login_or_reg()
@@ -185,7 +216,7 @@ class Menu():
         line_fragments = re.search(r'/([a-zA-Z]+)\s*(.*)', command_raw)
 
         if not line_fragments:
-            raise ValueError('Invalid command3')
+            raise ValueError('Invalid command! Try again.')
         
         command = line_fragments.group(1)
         params = re.findall(r'\w+', line_fragments.group(2)) if len(line_fragments.groups()) > 1 else []
@@ -201,8 +232,8 @@ class Menu():
         return int(selected_number)
     
     def check_for_exit_command(self, command_raw):
-        if re.search(r'\s*exit\s*', command_raw):
+        if re.search(r'\s*/exit\s*', command_raw):
             exit()
-        elif re.search(r'\s*menu\s*', command_raw):
+        elif re.search(r'\s*/menu\s*', command_raw):
             self.clear()
             self.init_menu()

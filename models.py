@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, String, DateTime
+from sqlalchemy import Column, Integer, Float, String, DateTime, func
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -28,7 +28,9 @@ class Messages(Base):
     id = Column(Integer, primary_key=True)
     chat_id = Column(Integer)
     content = Column(String)
-    sent_time = Column(DateTime)
+    sent_time = Column(DateTime, default=func.now())
+    sender = Column(String)
+    read = Column(Integer, default=0)
 
 class DiaryLog(Base):
     __tablename__ = 'diary'

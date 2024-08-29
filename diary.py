@@ -7,8 +7,8 @@ class Diary():
     def __init__(self, user_id, db):
         self.user_id = user_id
         self.db = db
-        self.vertical_header = "Date"
         self.header_map = {
+            "date": "Date",
             "chemical": "Chemical",
             "quantity": "Quantity"
         }
@@ -19,7 +19,8 @@ class Diary():
         logs = self.db.get_diary_logs(self.user_id)
         grouped_logs = {}
         for log in logs:
-            date = log["date"].strftime('%d.%m.%Y')
+            log["date"] = log["date"].strftime('%d.%m.%Y')
+            date = log["date"]
             if date not in grouped_logs:
                 grouped_logs[date] = []
             grouped_logs[date].append(log)
@@ -30,12 +31,12 @@ class Diary():
         for logs in self.logs.values():
             all_logs += logs
         col_lengths = {
+            "date": 12,
             "chemical": max([len(chemical) for chemical in map(lambda log: log["chemical"], all_logs)]) + 2,
             "quantity": len("quantity") + 2
         }
-        vertical_header_length = 12
         cols = list(self.header_map.keys())
-        header = self.vertical_header + " " * (vertical_header_length - len(self.vertical_header))
+        header = ""
 
         for column in col_lengths.keys():
             header += self.header_map[column] + (col_lengths[column] - len(self.header_map[column])) * " "
@@ -45,21 +46,25 @@ class Diary():
 
         for date, logs in self.logs.items():
             for log in logs:
-                row = date + " " * (vertical_header_length - len(date)) if log == logs[0] else " " * vertical_header_length
+                row = ""
                 for column in cols:
-                    row += str(log[column]) + (col_lengths[column] - len(str(log[column]))) * " "
+                    if log == logs[0] and column == "date":
+                        row += date + " " * (col_lengths[column] - len(date))
+                    elif column == "date":
+                        row += " " * col_lengths[column]
+                    else:
+                        row += str(log[column]) + (col_lengths[column] - len(str(log[column]))) * " "
                 print(row)
             print(row_separator)
 
     def sort_logs(self, sort_by, reverse=False):
-        for logs in self.logs.values():
-            logs.sort(key=lambda x: x.__dict__[sort_by], reverse=reverse)
-
-        print("\n")
-        self()
+        if (sort_by == "date"):
+            self.logs = {key: self.logs[key] for key in sorted(self.logs, reverse=reverse)}
+        else:
+            for logs in self.logs.values():
+                logs.sort(key=lambda x: x[sort_by], reverse=reverse)
         order = "desc" if reverse else "asc"
         print(f"Sorted by: {self.header_map[sort_by].lower()} ({order})")
-        print("\n")
 
     def get_diary_logs(self):
         return self.logs
