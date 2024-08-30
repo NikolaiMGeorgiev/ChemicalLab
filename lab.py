@@ -89,7 +89,7 @@ class Lab:
             
         for i in range(max_population_count):
             chems = sorted_population[i]
-            selection_percentage = math.ceil(fitness[self.chem_string(chems)] * 100 / total_coef)
+            selection_percentage = math.ceil(fitness[self.chem_string(chems)] * 100/total_coef)
             if selection_percentage:
                 selection_pool.extend([chems] * selection_percentage)
             
@@ -106,7 +106,7 @@ class Lab:
             split_start = split_index - split_group if split_index >= split_group else split_index
             split_end = split_index if split_index >= split_group else split_index + split_group
             if split_end >= self.chems_count:
-                difference = split_end - self.chems_count + 1
+                difference = split_end - self.chems_count+1
                 split_end -= difference
                 split_start -= difference
             parent = self.population[i]
@@ -134,10 +134,12 @@ class Lab:
         child[insertion_index], child[chem_index] = child[chem_index], child[insertion_index]
 
     def get_coeff(self, chem_name, other_chem_name, position):
-        pos_coeff = sum(map(lambda x: (x[0] - x[1]) ** 2, zip(self.chem_pos_eff[chem_name], self.chem_pos_eff[other_chem_name])))
-        neg_coeff = sum(map(lambda x: (x[0] - x[1]) ** 2, zip(self.chem_neg_eff[chem_name], self.chem_neg_eff[other_chem_name])))
+        pos_coeff = sum(map(lambda x: (x[0]-x[1]) ** 2, zip(self.chem_pos_eff[chem_name], self.chem_pos_eff[other_chem_name])))
+        neg_coeff = sum(map(lambda x: (x[0]-x[1]) ** 2, zip(self.chem_neg_eff[chem_name], self.chem_neg_eff[other_chem_name])))
         max_property_index = self.pos_eff_names.index(self.max_by_property)
-        return (self.chem_pos_eff[chem_name][max_property_index] - self.chem_neg_eff[chem_name][max_property_index]) + (pos_coeff - neg_coeff) * self.chem_pos_coef[chem_name][position]
+        return ((self.chem_pos_eff[chem_name][max_property_index] 
+                 - self.chem_neg_eff[chem_name][max_property_index]) 
+                 + (pos_coeff - neg_coeff) * self.chem_pos_coef[chem_name][position])
 
     def get_substance_properties(self, substance):
         properties = {name: 0 for name in list(self.pos_eff_names) + list(self.neg_eff_names)}
@@ -150,13 +152,13 @@ class Lab:
                 effect_name = self.neg_eff_names[effect_pos]
                 properties[effect_name] += self.chem_neg_eff[chem_name][effect_pos] * self.chem_pos_coef[chem_name][chem_pos]
         for property in properties.keys():
-            properties[property] = round(properties[property] * 100/ self.chems_count)
+            properties[property] = round(properties[property] * 100/self.chems_count)
         return properties
 
     def chem_string(self, chems):
         return ", ".join(map(str, chems))
 
-    def print_result(self, population_data, names = None):
+    def print_result(self, population_data, names=None):
         print(round(population_data["evaluation"], 2))
         print(population_data["fittest_individual"])
         print(",".join([names[int(index)] for index in population_data["fittest_individual"].split(", ")]))

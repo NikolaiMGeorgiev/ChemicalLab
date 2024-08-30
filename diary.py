@@ -1,8 +1,3 @@
-from models import Users, DiaryLog
-from sqlalchemy import desc
-from datetime import datetime
-import re
-
 class Diary():
     def __init__(self, user_id, db):
         self.user_id = user_id
@@ -30,6 +25,9 @@ class Diary():
         all_logs = []
         for logs in self.logs.values():
             all_logs += logs
+        if not len(all_logs):
+            print("No logs in diary")
+            return
         col_lengths = {
             "date": 12,
             "chemical": max([len(chemical) for chemical in map(lambda log: log["chemical"], all_logs)]) + 2,

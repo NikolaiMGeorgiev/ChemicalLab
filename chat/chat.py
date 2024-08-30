@@ -22,7 +22,7 @@ class Chat:
         response = requests.get(f"{self.server_addr}/new_chat?user_id={self.user_id}")
         response_data = response.json()
         if not self.validate_response(response_data, "Couldn't create chat"):
-            return
+            return None
         if "chat_id" in response_data:
             self.chat_id = response_data["chat_id"]
             self.counterparty = response_data["vendor_id"]
